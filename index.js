@@ -59,6 +59,8 @@ app.get("/ai/recommend", (req, res) => {
   res.json({ recommendation: "Try Ankara products" });
 });
 
-
+app.get("/debug-sentry", function mainHandler(req, res) {
+  throw new Error("My first Sentry error!");
+});
 
 export default app;
