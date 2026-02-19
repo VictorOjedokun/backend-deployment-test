@@ -2,10 +2,19 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
+import * as Sentry from "@sentry/node";
 
 dotenv.config();
 
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  tracesSampleRate: 1.0,
+  environment: process.env.NODE_ENV,
+});
+
 const app = express();
+
+app.use(Sentry.Handlers.requestHandler());
 app.use(cors());
 app.use(express.json());
 
@@ -20,23 +29,36 @@ app.get("/", (req, res) => {
 
 app.get("/products", async (req, res) => {
   const { data, error } = await supabase.from("products").select("*");
+
+  if (error) {
+    Sentry.captureException(error);
+    return res.status(500).json({ error: error.message });
+  }
+
   res.json(data);
 });
 
 app.post("/orders", async (req, res) => {
-  const { user_id, product_id, quantity } = req.body;
+  try {
+    const { user_id, product_id, quantity } = req.body;
 
-  const { data, error } = await supabase
-    .from("orders")
-    .insert([{ user_id, product_id, quantity }]);
+    const { data, error } = await supabase
+      .from("orders")
+      .insert([{ user_id, product_id, quantity }]);
 
-  res.json({ status: "success", data });
+    if (error) throw error;
+
+    res.json({ status: "success", data });
+  } catch (err) {
+    Sentry.captureException(err);
+    res.status(500).json({ error: "Order failed" });
+  }
 });
 
 app.get("/ai/recommend", (req, res) => {
   res.json({ recommendation: "Try Ankara products" });
 });
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
-});
+app.use(Sentry.Handlers.errorHandler());
+
+export default app;
