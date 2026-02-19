@@ -14,7 +14,7 @@ Sentry.init({
 
 const app = express();
 
-app.use(Sentry.Handlers.requestHandler());
+
 app.use(cors());
 app.use(express.json());
 
@@ -59,6 +59,6 @@ app.get("/ai/recommend", (req, res) => {
   res.json({ recommendation: "Try Ankara products" });
 });
 
-app.use(Sentry.Handlers.errorHandler());
+
 
 export default app;
