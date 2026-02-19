@@ -64,3 +64,9 @@ app.get("/debug-sentry", function mainHandler(req, res) {
 });
 
 export default app;
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`BIDORO backend running on port ${PORT}`);
+});
